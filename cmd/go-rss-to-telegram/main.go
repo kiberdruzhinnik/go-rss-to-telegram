@@ -30,6 +30,21 @@ func readConfiguration() gorsstotelegram.Config {
 		cfg.FetchTags = false
 	}
 
+	// split and fix urls
+	splittedUrls := strings.Split(cfg.FeedURL, ",")
+	feedUrls := make([]string, 0)
+	for _, url := range splittedUrls {
+		currentUrl := strings.TrimSpace(url)
+		if currentUrl == "" {
+			continue
+		}
+		feedUrls = append(feedUrls, currentUrl)
+	}
+	if len(feedUrls) == 0 {
+		log.Fatalln("No feed urls provided")
+	}
+	cfg.FeedURLsParsed = feedUrls
+
 	telegramChannelID, err := strconv.Atoi(cfg.TelegramChannelIDString)
 	if err != nil {
 		log.Fatalln(err)

@@ -53,13 +53,32 @@ func ProcessNewFeedItems(newFeedItems []*gofeed.Item, tgBot *tgbotapi.BotAPI, db
 			tags, err := ExtractTags(item.Link)
 			if err != nil {
 				log.Println(err)
-				continue
 			}
 			fetchedTags = tags
 		}
 
-		content := fmt.Sprintf("%s\n%s\n\n%s\n\n%s", item.Title, description, item.Link, strings.Join(fetchedTags, " "))
-		content = strings.TrimSpace(content)
+		content := ""
+
+		title := strings.TrimSpace(item.Title)
+		image = strings.TrimSpace(image)
+		description = strings.TrimSpace(description)
+		link := strings.TrimSpace(item.Link)
+
+		if title != "" {
+			content += fmt.Sprintf("%s\n", title)
+		}
+		if description != "" {
+			content += fmt.Sprintf("%s\n\n", description)
+		}
+		if link != "" {
+			content += fmt.Sprintf("%s\n\n", link)
+		}
+		if len(fetchedTags) != 0 {
+			tags := strings.Join(fetchedTags, " ")
+			content += tags
+		}
+
+		log.Println(content)
 
 		var message tgbotapi.Chattable
 
@@ -109,17 +128,17 @@ func Execute(cfg Config) {
 	}
 
 	for {
-		log.Printf("Now checking feed %s\n", cfg.FeedURL)
-		feedParser := gofeed.NewParser()
-		feed, err := feedParser.ParseURL(cfg.FeedURL)
-		if err != nil {
-			log.Fatalln(err)
+		for _, feedUrl := range cfg.FeedURLsParsed {
+			log.Printf("Now checking feed %s\n", feedUrl)
+			feedParser := gofeed.NewParser()
+			feed, err := feedParser.ParseURL(feedUrl)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			newFeedItems := GetNewFeedItems(feed, db)
+			sort.Sort(sort.Reverse(GoFeedItemSlice(newFeedItems)))
+			ProcessNewFeedItems(newFeedItems, tgBot, db, cfg)
 		}
-
-		newFeedItems := GetNewFeedItems(feed, db)
-		sort.Sort(sort.Reverse(GoFeedItemSlice(newFeedItems)))
-		ProcessNewFeedItems(newFeedItems, tgBot, db, cfg)
-
 		log.Printf("Now sleeping for %d minutes\n", cfg.SleepTimeMinutes)
 		time.Sleep(time.Minute * time.Duration(cfg.SleepTimeMinutes))
 	}
