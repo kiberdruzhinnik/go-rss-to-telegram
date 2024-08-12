@@ -3,4 +3,3 @@ TELEGRAM_BOT_TOKEN: "your_telegram_bot_token"
 TELEGRAM_CHANNEL_ID: your_telegram_channel_id
 DATABASE_PATH: "./database"
 SLEEP_TIME_MINUTES: 30
-FETCH_TAGS: true

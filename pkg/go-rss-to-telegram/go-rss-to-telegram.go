@@ -18,18 +18,6 @@ import (
 const TELEGRAM_MAXIMUM_POST_SIZE = 4096
 const TELEGRAM_MAXIMUM_PHOTO_SIZE = 1024
 
-func ExtractTags(link string) ([]string, error) {
-	response, err := http.Get(link)
-	if err != nil {
-		return []string{}, err
-	}
-	bytes, err := io.ReadAll(response.Body)
-	if err != nil {
-		return []string{}, err
-	}
-	return khtml.ExtractTagsFromMeta(string(bytes))
-}
-
 func GetNewFeedItems(feed *gofeed.Feed, db *kv.KV) []*gofeed.Item {
 	var newFeedItems []*gofeed.Item
 	for _, item := range feed.Items {
@@ -51,15 +39,6 @@ func ProcessNewFeedItems(newFeedItems []*gofeed.Item, tgBot *tgbotapi.BotAPI, db
 		image := khtml.ExtractImageLinkFromImgTag(item.Description)
 		description := khtml.SimpleStripAllHTML(item.Description)
 
-		fetchedTags := []string{}
-		if cfg.FetchTags {
-			tags, err := ExtractTags(item.Link)
-			if err != nil {
-				log.Println(err)
-			}
-			fetchedTags = tags
-		}
-
 		content := ""
 
 		title := strings.TrimSpace(item.Title)
@@ -75,10 +54,6 @@ func ProcessNewFeedItems(newFeedItems []*gofeed.Item, tgBot *tgbotapi.BotAPI, db
 		}
 		if link != "" {
 			content += fmt.Sprintf("%s\n\n", link)
-		}
-		if len(fetchedTags) != 0 {
-			tags := strings.Join(fetchedTags, " ")
-			content += tags
 		}
 
 		log.Println(content)
