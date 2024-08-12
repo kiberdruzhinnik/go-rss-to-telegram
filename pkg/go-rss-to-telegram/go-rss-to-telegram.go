@@ -8,6 +8,7 @@ import (
 	"sort"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
 	khtml "github.com/kiberdruzhinnik/go-rss-to-telegram/pkg/html"
@@ -78,11 +79,11 @@ func ProcessNewFeedItems(newFeedItems []*gofeed.Item, tgBot *tgbotapi.BotAPI, db
 			if len(content) > TELEGRAM_MAXIMUM_PHOTO_SIZE {
 				content = fmt.Sprintf("%s...", content[:TELEGRAM_MAXIMUM_PHOTO_SIZE-3])
 			}
-			msg.Caption = content
+			msg.Caption = encodeToUTF8(content)
 			message = msg
 		} else {
 			if len(content) > TELEGRAM_MAXIMUM_POST_SIZE {
-				content = fmt.Sprintf("%s...", content[:TELEGRAM_MAXIMUM_POST_SIZE-3])
+				content = encodeToUTF8(fmt.Sprintf("%s...", content[:TELEGRAM_MAXIMUM_POST_SIZE-3]))
 			}
 			msg := tgbotapi.NewMessage(cfg.TelegramChannelID, content)
 			message = msg
@@ -127,4 +128,14 @@ func Execute(cfg Config) {
 		time.Sleep(time.Minute * time.Duration(cfg.SleepTimeMinutes))
 	}
 
+}
+
+func encodeToUTF8(input string) string {
+	encoded := make([]byte, 0, len(input))
+	for _, r := range input {
+		b := make([]byte, 4)
+		n := utf8.EncodeRune(b, r)
+		encoded = append(encoded, b[:n]...)
+	}
+	return string(encoded)
 }
