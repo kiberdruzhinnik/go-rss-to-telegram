@@ -24,11 +24,6 @@ func readConfiguration() gorsstotelegram.Config {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	if strings.ToLower(cfg.FetchTagsString) == "true" {
-		cfg.FetchTags = true
-	} else {
-		cfg.FetchTags = false
-	}
 
 	// split and fix urls
 	splittedUrls := strings.Split(cfg.FeedURL, ",")
