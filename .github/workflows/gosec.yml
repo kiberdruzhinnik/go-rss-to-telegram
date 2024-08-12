@@ -4,6 +4,10 @@ name: "gosec"
 # The scheduled workflow runs every at 00:00 on Sunday UTC time.
 on:
   push:
+    branches: [ "main" ]
+  pull_request:
+    # The branches below must be a subset of the branches above
+    branches: [ "main" ]
   schedule:
   - cron: '0 0 * * 0'
 

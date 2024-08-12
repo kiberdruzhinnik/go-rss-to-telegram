@@ -15,6 +15,9 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
+const TELEGRAM_MAXIMUM_POST_SIZE = 4096
+const TELEGRAM_MAXIMUM_PHOTO_SIZE = 1024
+
 func ExtractTags(link string) ([]string, error) {
 	response, err := http.Get(link)
 	if err != nil {
@@ -97,9 +100,15 @@ func ProcessNewFeedItems(newFeedItems []*gofeed.Item, tgBot *tgbotapi.BotAPI, db
 			response.Body.Close()
 			imagePart := tgbotapi.FileBytes{Name: item.Title, Bytes: bytes}
 			msg := tgbotapi.NewPhotoUpload(cfg.TelegramChannelID, imagePart)
+			if len(content) > TELEGRAM_MAXIMUM_PHOTO_SIZE {
+				content = fmt.Sprintf("%s...", content[:TELEGRAM_MAXIMUM_PHOTO_SIZE-3])
+			}
 			msg.Caption = content
 			message = msg
 		} else {
+			if len(content) > TELEGRAM_MAXIMUM_POST_SIZE {
+				content = fmt.Sprintf("%s...", content[:TELEGRAM_MAXIMUM_POST_SIZE-3])
+			}
 			msg := tgbotapi.NewMessage(cfg.TelegramChannelID, content)
 			message = msg
 		}
