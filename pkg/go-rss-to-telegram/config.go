@@ -11,6 +11,4 @@ type Config struct {
 	TelegramBotToken        string `yaml:"TELEGRAM_BOT_TOKEN" env:"TELEGRAM_BOT_TOKEN"`
 	TelegramChannelIDString string `yaml:"TELEGRAM_CHANNEL_ID" env:"TELEGRAM_CHANNEL_ID"`
 	TelegramChannelID       int64
-	FetchTagsString         string `yaml:"FETCH_TAGS" env:"FETCH_TAGS"`
-	FetchTags               bool
 }
