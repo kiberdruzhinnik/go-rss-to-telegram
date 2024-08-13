@@ -2,15 +2,13 @@ package gorsstotelegram
 
 import (
 	"fmt"
-	"io"
 	"log"
-	"net/http"
 	"sort"
 	"strings"
 	"time"
 	"unicode/utf8"
 
-	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api"
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	khtml "github.com/kiberdruzhinnik/go-rss-to-telegram/pkg/html"
 	"github.com/kiberdruzhinnik/go-rss-to-telegram/pkg/kv"
 	"github.com/mmcdole/gofeed"
@@ -18,6 +16,20 @@ import (
 
 const TELEGRAM_MAXIMUM_POST_SIZE = 4096
 const TELEGRAM_MAXIMUM_PHOTO_SIZE = 1024
+
+func SelectButtonText(url string) string {
+	if strings.Contains(url, "blog.kiberdruzhinnik.ru") {
+		return "📖 Читать в блоге"
+	} else if strings.Contains(url, "vk.com/video") {
+		return "📺 Смотреть на VK Video"
+	} else if strings.Contains(url, "youtube.com") || strings.Contains(url, "youtu.be") {
+		return "📺 Смотреть на YouTube"
+	} else if strings.Contains(url, "rutube.ru") {
+		return "📺 Смотреть на RuTube"
+	} else {
+		return "🚶 Перейти на"
+	}
+}
 
 func GetNewFeedItems(feed *gofeed.Feed, db *kv.KV) []*gofeed.Item {
 	var newFeedItems []*gofeed.Item
@@ -37,59 +49,43 @@ func GetNewFeedItems(feed *gofeed.Feed, db *kv.KV) []*gofeed.Item {
 func ProcessNewFeedItems(newFeedItems []*gofeed.Item, tgBot *tgbotapi.BotAPI, db *kv.KV, cfg Config) {
 	for _, item := range newFeedItems {
 		log.Printf("Processing new entry: %s\n", item.GUID)
-		image := khtml.ExtractImageLinkFromImgTag(item.Description)
+		// image := khtml.ExtractImageLinkFromImgTag(item.Description)
 		description := khtml.SimpleStripAllHTML(item.Description)
 
 		content := ""
 
 		title := strings.TrimSpace(item.Title)
-		image = strings.TrimSpace(image)
+		// image = strings.TrimSpace(image)
 		description = strings.TrimSpace(description)
 		link := strings.TrimSpace(item.Link)
 
 		if title != "" {
-			content += fmt.Sprintf("%s\n", title)
+			content += fmt.Sprintf("⚠️⚠️⚠️<b>%s</b>⚠️⚠️⚠️\n\n", title)
 		}
+
+		content += fmt.Sprintf("%s: %s\n\n", SelectButtonText(link), link)
+
 		if description != "" {
 			content += fmt.Sprintf("%s\n\n", description)
 		}
-		if link != "" {
-			content += fmt.Sprintf("%s\n\n", link)
+
+		if len(content) > TELEGRAM_MAXIMUM_POST_SIZE {
+			content = content[:TELEGRAM_MAXIMUM_POST_SIZE]
 		}
 
-		log.Println(content)
-
-		var message tgbotapi.Chattable
-
-		if image != "" {
-			response, err := http.Get(image)
-			if err != nil {
-				log.Println(err)
-				continue
-			}
-			bytes, err := io.ReadAll(response.Body)
-			if err != nil {
-				log.Println(err)
-				response.Body.Close()
-				continue
-			}
-			response.Body.Close()
-			imagePart := tgbotapi.FileBytes{Name: item.Title, Bytes: bytes}
-			msg := tgbotapi.NewPhotoUpload(cfg.TelegramChannelID, imagePart)
-			if len(content) > TELEGRAM_MAXIMUM_PHOTO_SIZE {
-				content = fmt.Sprintf("%s...", content[:TELEGRAM_MAXIMUM_PHOTO_SIZE-3])
-			}
-			msg.Caption = encodeToUTF8(content)
-			message = msg
-		} else {
-			if len(content) > TELEGRAM_MAXIMUM_POST_SIZE {
-				content = encodeToUTF8(fmt.Sprintf("%s...", content[:TELEGRAM_MAXIMUM_POST_SIZE-3]))
-			}
-			msg := tgbotapi.NewMessage(cfg.TelegramChannelID, content)
-			message = msg
+		if len(content) > TELEGRAM_MAXIMUM_POST_SIZE {
+			content = encodeToUTF8(fmt.Sprintf("%s...", content[:TELEGRAM_MAXIMUM_POST_SIZE-3]))
 		}
+		msg := tgbotapi.NewMessage(cfg.TelegramChannelID, content)
+		msg.ParseMode = tgbotapi.ModeHTML
+		msg.DisableWebPagePreview = false
+		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
+			tgbotapi.NewInlineKeyboardRow(
+				tgbotapi.NewInlineKeyboardButtonURL(SelectButtonText(link), link),
+			),
+		)
 
-		_, err := tgBot.Send(message)
+		_, err := tgBot.Send(msg)
 		if err != nil {
 			log.Println(err)
 			continue
