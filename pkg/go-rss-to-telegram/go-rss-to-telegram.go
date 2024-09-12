@@ -22,6 +22,8 @@ func selectButtonText(url string) string {
 		return "📖 Читать в блоге"
 	} else if strings.Contains(url, "vk.com/video") {
 		return "▶️ Смотреть на VK Video"
+	} else if strings.Contains(url, "dzen.ru") {
+		return "▶️ Смотреть на Dzen"
 	} else if strings.Contains(url, "youtube.com") || strings.Contains(url, "youtu.be") {
 		return "🎥 Смотреть на YouTube"
 	} else if strings.Contains(url, "rutube.ru") {
