@@ -14,7 +14,6 @@ import (
 )
 
 const TELEGRAM_MAXIMUM_POST_SIZE = 4096
-const BOOSTY_DONATE_LINK = "https://boosty.to/kiberdruzhinnik/donate"
 const BOOSTY_SUBSCRIBE_LINK = "https://boosty.to/kiberdruzhinnik"
 
 func selectButtonText(url string) string {
@@ -76,9 +75,6 @@ func processNewFeedItems(newFeedItems []*gofeed.Item, tgBot *tgbotapi.BotAPI, db
 		msg.ParseMode = tgbotapi.ModeHTML
 		msg.DisableWebPagePreview = false
 		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
-			tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonURL("🎁 Поддержать на Boosty", BOOSTY_DONATE_LINK),
-			),
 			tgbotapi.NewInlineKeyboardRow(
 				tgbotapi.NewInlineKeyboardButtonURL("👉 Подписаться на Boosty", BOOSTY_SUBSCRIBE_LINK),
 			),
