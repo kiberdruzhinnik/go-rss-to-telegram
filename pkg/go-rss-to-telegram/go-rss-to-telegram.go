@@ -14,7 +14,6 @@ import (
 )
 
 const TELEGRAM_MAXIMUM_POST_SIZE = 4096
-const BOOSTY_SUBSCRIBE_LINK = "https://boosty.to/kiberdruzhinnik"
 
 func selectButtonText(url string) string {
 	if strings.Contains(url, "blog.kiberdruzhinnik.ru") {
@@ -59,7 +58,7 @@ func processNewFeedItems(newFeedItems []*gofeed.Item, tgBot *tgbotapi.BotAPI, db
 		link := strings.TrimSpace(item.Link)
 
 		if title != "" {
-			content += fmt.Sprintf("📢❗🚨 <b>%s</b>\n\n", title)
+			content += fmt.Sprintf("<b>%s</b>\n\n", title)
 		}
 
 		content += fmt.Sprintf("%s: %s\n\n", selectButtonText(link), link)
@@ -74,11 +73,6 @@ func processNewFeedItems(newFeedItems []*gofeed.Item, tgBot *tgbotapi.BotAPI, db
 		msg := tgbotapi.NewMessage(cfg.TelegramChannelID, content)
 		msg.ParseMode = tgbotapi.ModeHTML
 		msg.DisableWebPagePreview = false
-		msg.ReplyMarkup = tgbotapi.NewInlineKeyboardMarkup(
-			tgbotapi.NewInlineKeyboardRow(
-				tgbotapi.NewInlineKeyboardButtonURL("👉 Подписаться на Boosty", BOOSTY_SUBSCRIBE_LINK),
-			),
-		)
 
 		_, err := tgBot.Send(msg)
 		if err != nil {
