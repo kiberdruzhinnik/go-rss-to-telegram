@@ -103,7 +103,8 @@ func Execute(cfg Config) {
 			feedParser := gofeed.NewParser()
 			feed, err := feedParser.ParseURL(feedUrl)
 			if err != nil {
-				log.Fatalln(err)
+				log.Println(err)
+				continue
 			}
 			newFeedItems := getNewFeedItems(feed, db)
 			sort.Sort(sort.Reverse(GoFeedItemSlice(newFeedItems)))
