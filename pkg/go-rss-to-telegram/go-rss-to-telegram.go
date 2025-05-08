@@ -54,6 +54,11 @@ func processNewFeedItems(newFeedItems []*gofeed.Item, tgBot *tgbotapi.BotAPI, db
 		content := ""
 
 		title := strings.TrimSpace(item.Title)
+		// Check for bridge error in title (case-insensitive)
+		if strings.Contains(strings.ToLower(title), "bridge returned error") {
+			log.Printf("Skipping item with Bridge error in title: %s\n", item.Title)
+			continue
+		}
 		description = strings.TrimSpace(description)
 		link := strings.TrimSpace(item.Link)
 
